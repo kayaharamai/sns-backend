@@ -64,6 +64,12 @@ app.post("/user", async (req, res) => {
   return res.status(200).json(user);
 });
 
+//全てのユーザーの取得
+app.get("/users/all", async (req, res) => {
+  const userAll = await prisma.user.findMany();
+  return res.status(200).json(userAll);
+});
+
 // //特定の投稿データの取得
 // app.get("/post/:id", async (req, res) => {
 //   const singlePost = await prisma.post.findUnique({
@@ -157,14 +163,14 @@ app.delete("/user/:id", async (req, res) => {
   return res.status(200).json("ユーザーが削除されました");
 });
 
-//特定の投稿にいいねを押す
+// //特定の投稿にいいねを押す
 // app.post("/post/:id/like", async (req, res) => {
 //   // const post = await prisma.post.findUnique({ id: req.params.id });
 //   const id = req.params.id;
-//   const { likes, likeId } = req.body;
+//   const { authorId,likeId } = req.body;
 //   const likePost = await prisma.likes.create({
 //     data: {
-//       likes: String(likes),
+//       authorId: Number(authorId),
 //       likeId: Number(likeId),
 //     },
 //   });
@@ -174,22 +180,36 @@ app.delete("/user/:id", async (req, res) => {
 //   // }
 // });
 
-app.post("/post/:id/like", async (req, res) => {
-  const { likes, likeId } = req.body;
+//いいね
+app.post("/post/like", async (req, res) => {
   const id = req.params.id;
-  const likePost = await prisma.likes.upsert({
-    where: { likes: "user_sns" },
-    create: {
-      likes: "user_sns",
-      likeId: Number(2),
-    },
-    update: {
-      likes: "",
-      likeId: Number(""),
-    },
+  const { authorId,likes } = req.body;
+  const likePost = await prisma.post.findMany({
+    where: {
+      likes: {
+        contains: "tanaka_sns"
+      }
+    }
   });
-  return res.status(200).json("投稿にいいねを押しました!");
+  return res.status(200).json(likePost);
 });
+
+// app.post("/post/:id/like", async (req, res) => {
+//   const { likes, likeId } = req.body;
+//   const id = req.params.id;
+//   const likePost = await prisma.likes.upsert({
+//     where: { likes: "user_sns" },
+//     create: {
+//       likes: "user_sns",
+//       likeId: Number(2),
+//     },
+//     update: {
+//       likes: "",
+//       likeId: Number(""),
+//     },
+//   });
+//   return res.status(200).json("投稿にいいねを押しました!");
+// });
 
 //特定の投稿にコメントをする
 app.post("/post/:id/comment", async (req, res) => {
@@ -268,7 +288,6 @@ app.get("/like/all", async (req, res) => {
   });
   return res.status(200).json(likeAll);
 });
-
 
 // //ミドルウェア
 // app.use("/api/users", userRoute);
