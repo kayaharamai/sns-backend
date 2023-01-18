@@ -53,6 +53,8 @@ app.get("/post", async (req, res) => {
   return res.json(user);
 });
 
+//フォローしているユーザーの取得
+
 //条件に一致したユーザーの取得
 app.post("/user", async (req, res) => {
   const { userId } = req.body;
@@ -183,13 +185,13 @@ app.delete("/user/:id", async (req, res) => {
 //いいね
 app.post("/post/like", async (req, res) => {
   const id = req.params.id;
-  const { authorId,likes } = req.body;
+  const { authorId, likes } = req.body;
   const likePost = await prisma.post.findMany({
     where: {
       likes: {
-        contains: "tanaka_sns"
-      }
-    }
+        contains: "tanaka_sns",
+      },
+    },
   });
   return res.status(200).json(likePost);
 });
@@ -247,7 +249,7 @@ app.post("/following", async (req, res) => {
   const { followId, userId } = req.body;
   const follow = await prisma.followings.create({
     data: {
-      followId: Number(followId), //自分のuserと紐づくid
+      followId: Number(followId), //フォローした自分のuserと紐づくid
       userId: userId, //フォローする相手
     },
   });
@@ -264,6 +266,61 @@ app.post("/follower", async (req, res) => {
     },
   });
   return res.status(200).json("フォローされました");
+});
+
+//フォロー解除する
+app.post("/following/search", async (req, res) => {
+  const { userId, id } = req.body;
+  const followUser = await prisma.followings.findMany({
+    where: {
+      AND: [
+        {
+          userId: userId,
+        },
+        {
+          followId: Number(id),
+        },
+      ],
+    },
+  });
+  return res.status(200).json(followUser);
+});
+
+app.delete("/followings/:id", async (req, res) => {
+  // const { id, userId } = req.body;
+  const followDelete = await prisma.followings.delete({
+    where: {
+      id: Number(req.params.id),
+    },
+  });
+  return res.status(200).json("フォローを外しました");
+});
+
+//フォロー解除される
+app.post("/follower/search", async (req, res) => {
+  const { userId, id } = req.body;
+  const followerUser = await prisma.followers.findMany({
+    where: {
+      AND: [
+        {
+          userId: userId,
+        },
+        {
+          followerId: Number(id),
+        },
+      ],
+    },
+  });
+  return res.status(200).json(followerUser);
+});
+
+app.delete("/follower/:id", async (req, res) => {
+  const followerDelete = await prisma.followers.delete({
+    where: {
+      id: Number(req.params.id),
+    },
+  });
+  return res.status(200).json("フォローが外されました")
 });
 
 //投稿のコメントを取得
@@ -287,6 +344,19 @@ app.get("/like/all", async (req, res) => {
     },
   });
   return res.status(200).json(likeAll);
+});
+
+//ユーザーを探す
+app.post("/user/find", async (req, res) => {
+  const { userId } = req.body;
+  const result = await prisma.user.findMany({
+    where: {
+      userId: {
+        contains: userId,
+      },
+    },
+  });
+  return res.status(200).json(result);
 });
 
 // //ミドルウェア
