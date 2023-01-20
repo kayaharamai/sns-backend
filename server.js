@@ -12,6 +12,7 @@ const prisma = new PrismaClient();
 //json形式で扱うという宣言
 app.use(express.json());
 
+//Register
 //ユーザー情報の登録
 app.post("/register", async (req, res) => {
   const { username, userId, email, password } = req.body;
@@ -26,6 +27,7 @@ app.post("/register", async (req, res) => {
   return res.json(user);
 });
 
+//Login
 //ログイン
 app.post("/login", async (req, res) => {
   const user = await prisma.user.findUnique({
@@ -39,6 +41,7 @@ app.post("/login", async (req, res) => {
   return res.status(200).json(user);
 });
 
+//データ取得
 //全ての投稿データの取得
 app.get("/post", async (req, res) => {
   const user = await prisma.post.findMany({
@@ -52,8 +55,6 @@ app.get("/post", async (req, res) => {
   });
   return res.json(user);
 });
-
-//フォローしているユーザーの取得
 
 //条件に一致したユーザーの取得
 app.post("/user", async (req, res) => {
@@ -71,22 +72,6 @@ app.get("/users/all", async (req, res) => {
   const userAll = await prisma.user.findMany();
   return res.status(200).json(userAll);
 });
-
-// //特定の投稿データの取得
-// app.get("/post/:id", async (req, res) => {
-//   const singlePost = await prisma.post.findUnique({
-//     where: {
-//       id: Number(req.params.id),
-//     },
-//   });
-//   if (!singlePost) {
-//     return res.status(404).send("投稿が見つかりません");
-//   } else {
-//     return res.status(200).json(singlePost);
-//   }
-//   // const vaildPassword = req.body.password === user.password;
-//   // if (!vaildPassword) return res.status(400).json("パスワードが違います");
-// });
 
 //特定のユーザーを取得（投稿も含む）
 app.get("/profile/:id", async (req, res) => {
@@ -125,26 +110,31 @@ app.get("/post/:id", async (req, res) => {
   return res.status(200).json(post);
 });
 
+//投稿のコメントを取得
+app.get("/users", async (req, res) => {
+  const users = await prisma.user.findMany({
+    include: { posts: true },
+  });
+  return res.status(200).json(users);
+});
+
+//更新
 //ユーザー情報の更新
 app.put("/users/:id", async (req, res) => {
   const id = req.params.id;
-  const { userId, username, email, password } = req.body;
+  const { desc } = req.body;
   const updateData = await prisma.user.update({
     where: {
       id: Number(id),
     },
     data: {
-      userId: userId,
-      username: username,
-      email: email,
-      password: password,
+      desc: desc,
     },
   });
   return res.status(200).json(updateData);
 });
 
-//特定の投稿データの取得（フォローしている）
-
+//削除
 //特定の投稿データの削除
 app.delete("/post/:id", async (req, res) => {
   const post = await prisma.post.delete({
@@ -165,54 +155,7 @@ app.delete("/user/:id", async (req, res) => {
   return res.status(200).json("ユーザーが削除されました");
 });
 
-// //特定の投稿にいいねを押す
-// app.post("/post/:id/like", async (req, res) => {
-//   // const post = await prisma.post.findUnique({ id: req.params.id });
-//   const id = req.params.id;
-//   const { authorId,likeId } = req.body;
-//   const likePost = await prisma.likes.create({
-//     data: {
-//       authorId: Number(authorId),
-//       likeId: Number(likeId),
-//     },
-//   });
-//   return res.status(200).json(likePost);
-//   // if(!post.likes.includes(req.body.userId)) {
-//   //   await prisma.like.update({})
-//   // }
-// });
-
-//いいね
-app.post("/post/like", async (req, res) => {
-  const id = req.params.id;
-  const { authorId, likes } = req.body;
-  const likePost = await prisma.post.findMany({
-    where: {
-      likes: {
-        contains: "tanaka_sns",
-      },
-    },
-  });
-  return res.status(200).json(likePost);
-});
-
-// app.post("/post/:id/like", async (req, res) => {
-//   const { likes, likeId } = req.body;
-//   const id = req.params.id;
-//   const likePost = await prisma.likes.upsert({
-//     where: { likes: "user_sns" },
-//     create: {
-//       likes: "user_sns",
-//       likeId: Number(2),
-//     },
-//     update: {
-//       likes: "",
-//       likeId: Number(""),
-//     },
-//   });
-//   return res.status(200).json("投稿にいいねを押しました!");
-// });
-
+//データ送信
 //特定の投稿にコメントをする
 app.post("/post/:id/comment", async (req, res) => {
   const { comment, postId, userId, username } = req.body;
@@ -320,30 +263,7 @@ app.delete("/follower/:id", async (req, res) => {
       id: Number(req.params.id),
     },
   });
-  return res.status(200).json("フォローが外されました")
-});
-
-//投稿のコメントを取得
-app.get("/users", async (req, res) => {
-  const users = await prisma.user.findMany({
-    include: { posts: true },
-  });
-  return res.status(200).json(users);
-});
-
-//自分がいいねを押した投稿を取得
-app.get("/like/all", async (req, res) => {
-  const { userId } = req.body;
-  const likeAll = await prisma.post.findMany({
-    include: {
-      likes: {
-        where: {
-          likes: userId,
-        },
-      },
-    },
-  });
-  return res.status(200).json(likeAll);
+  return res.status(200).json("フォローが外されました");
 });
 
 //ユーザーを探す
