@@ -188,6 +188,46 @@ app.post("/post", async (req: Request, res: Response) => {
   return res.status(200).json("投稿できました");
 });
 
+//いいねをする
+app.post("/post/:id/like", async (req: Request, res: Response) => {
+  const { likeId, userId, authorId } = req.body;
+  const likePost = await prisma.likes.create({
+    data: {
+      likeId: Number(likeId), //投稿と紐づくId
+      likes: userId, //いいねをしたuser
+      authorId: Number(authorId), //いいねをしたuser
+    },
+  });
+  return res.status(200).json(likePost);
+});
+
+//いいねを解除する
+app.post("/post/like/search", async (req: Request, res: Response) => {
+  const { likeId, userId } = req.body;
+  const likePost = await prisma.likes.findMany({
+    where: {
+      AND: [
+        {
+          likeId: Number(likeId),
+        },
+        {
+          likes: userId,
+        },
+      ],
+    },
+  });
+  return res.status(200).json(likePost);
+});
+
+app.delete("/post/:id/like", async (req: Request, res: Response) => {
+  const likePost = await prisma.likes.delete({
+    where: {
+      id: Number(req.params.id),
+    },
+  });
+  return res.status(200).json("いいねを外しました");
+});
+
 //フォローする
 app.post("/following", async (req: Request, res: Response) => {
   const { followId, userId } = req.body;
@@ -276,6 +316,23 @@ app.post("/user/find", async (req: Request, res: Response) => {
         contains: userId,
       },
     },
+  });
+  return res.status(200).json(result);
+});
+
+//自分がいいねをした投稿を探す
+app.post("/post/find", async (req: Request, res: Response) => {
+  const { userId } = req.body;
+  const result = await prisma.post.findMany({
+    where: {
+      likes: {
+        some: {
+          likes: {
+            contains: userId,
+          }
+        }
+      }
+    }
   });
   return res.status(200).json(result);
 });
