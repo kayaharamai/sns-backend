@@ -230,11 +230,13 @@ app.delete("/post/:id/like", async (req: Request, res: Response) => {
 
 //フォローする
 app.post("/following", async (req: Request, res: Response) => {
-  const { followId, userId } = req.body;
+  const { followId, userId,followerId } = req.body;
   const follow = await prisma.followings.create({
     data: {
       followId: Number(followId), //フォローした自分のuserと紐づくid
       userId: userId, //フォローする相手
+      followerId: followerId //フォローする相手のid
+
     },
   });
   return res.status(200).json("フォローしました");
@@ -242,11 +244,12 @@ app.post("/following", async (req: Request, res: Response) => {
 
 //フォローされる
 app.post("/follower", async (req: Request, res: Response) => {
-  const { followerId, userId } = req.body;
+  const { followerId, userId,followId } = req.body;
   const follower = await prisma.followers.create({
     data: {
       followerId: Number(followerId), //フォローされた人のuserと紐づくid
       userId: userId, //フォローしてきた人
+      followId: followId //フォローする人のid
     },
   });
   return res.status(200).json("フォローされました");
@@ -320,21 +323,42 @@ app.post("/user/find", async (req: Request, res: Response) => {
   return res.status(200).json(result);
 });
 
-//自分がいいねをした投稿を探す
+// //自分がいいねをした投稿を探す
+// app.post("/post/find", async (req: Request, res: Response) => {
+//   const { userId } = req.body;
+//   const result = await prisma.post.findMany({
+//     where: {
+//       likes: {
+//         some: {
+//           likes: {
+//             contains: userId,
+//           }
+//         }
+//       }
+//     },
+//     include: {
+//           likes: true,
+//           comment: true,
+//         },
+//   });
+//   return res.status(200).json(result);
+// });
+
+//自分がいいねした投稿を探す
 app.post("/post/find", async (req: Request, res: Response) => {
-  const { userId } = req.body;
+  const { authorId } = req.body;
   const result = await prisma.post.findMany({
-    where: {
+    where : {
       likes: {
-        some: {
-          likes: {
-            contains: userId,
-          }
-        }
+        some: {authorId: Number(authorId)}
       }
+    },
+    include: {
+      likes: true,
+      comment: true
     }
   });
-  return res.status(200).json(result);
+  return res.json(result)
 });
 
 // //ミドルウェア

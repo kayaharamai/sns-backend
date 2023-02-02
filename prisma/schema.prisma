@@ -51,6 +51,7 @@ model Followers {
   id Int @default(autoincrement()) @id
   user User? @relation(fields: [followerId],references: [id], onDelete: Cascade)
   followerId Int
+  followId Int
   userId String
 }
 
@@ -58,6 +59,7 @@ model Followings {
   id Int @default(autoincrement()) @id
   user User? @relation(fields: [followId],references: [id], onDelete: Cascade)
   followId Int
+  followerId Int
   userId String
 }
 
