@@ -4,9 +4,6 @@ import { Request, Response } from "express";
 const express = require("express");
 const app = express();
 const PORT = 8000;
-const userRoute = require("./routes/users");
-const authRoute = require("./routes/auth");
-const postRoute = require("./routes/posts");
 
 const prisma = new PrismaClient();
 
