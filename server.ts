@@ -179,10 +179,9 @@ app.post("/post", async (req: Request, res: Response) => {
     data: {
       desc: desc,
       img: img,
-      authorId: Number(authorId), //authorIdをuserIdにできるか？（する必要はあるか）、投稿者のuserと紐づくid
+      authorId: Number(authorId), //投稿者のuserと紐づくid
       userId: userId,
       username: username,
-      // createdAt: req.createdAt,
     },
   });
   return res.status(200).json("投稿できました");
@@ -274,7 +273,6 @@ app.post("/following/search", async (req: Request, res: Response) => {
 });
 
 app.delete("/followings/:id", async (req: Request, res: Response) => {
-  // const { id, userId } = req.body;
   const followDelete = await prisma.followings.delete({
     where: {
       id: Number(req.params.id),
@@ -323,27 +321,6 @@ app.post("/user/find", async (req: Request, res: Response) => {
   return res.status(200).json(result);
 });
 
-// //自分がいいねをした投稿を探す
-// app.post("/post/find", async (req: Request, res: Response) => {
-//   const { userId } = req.body;
-//   const result = await prisma.post.findMany({
-//     where: {
-//       likes: {
-//         some: {
-//           likes: {
-//             contains: userId,
-//           }
-//         }
-//       }
-//     },
-//     include: {
-//           likes: true,
-//           comment: true,
-//         },
-//   });
-//   return res.status(200).json(result);
-// });
-
 //自分がいいねした投稿を探す
 app.post("/post/find", async (req: Request, res: Response) => {
   const { authorId } = req.body;
@@ -361,10 +338,6 @@ app.post("/post/find", async (req: Request, res: Response) => {
   return res.json(result)
 });
 
-// //ミドルウェア
-// app.use("/api/users", userRoute);
-// app.use("/api/auth", authRoute);
-// app.use("/api/posts", postRoute);
 
 app.listen(PORT, () => {
   console.log("サーバーが起動中です...");
